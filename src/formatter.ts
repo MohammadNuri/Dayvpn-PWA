@@ -129,10 +129,34 @@ export const formatTelegramMessage = (data: any): string => {
             msg += `🔑 لینک‌های اختصاصی:\n`;
             takLinks.forEach((link: any, index: number) => {
                 const tag = link.split("#")[1] || link;
-                msg += `${index + 1}️⃣ ${decodeURIComponent(tag)}\n`;
+                msg += `${index + 1}. ${decodeURIComponent(String(tag))}\n`;
             });
         }
 
+        return msg;
+    }
+
+    // 🆕 مدل ۵: افزایش زمان
+    if (data.new_exp && data.day_added) {
+        const newExpireDate = new Date(data.new_exp * 1000).toLocaleDateString("fa-IR");
+        let msg = `⏱ تمدید زمان سرویس\n`;
+        msg += `━━━━━━━━━━━━━━━\n\n`;
+        msg += `✅ مدت زمان سرویس با موفقیت افزایش یافت.\n\n`;
+        msg += `➕ روزهای افزوده‌شده: ${data.day_added} روز\n`;
+        msg += `📅 تاریخ انقضای جدید: ${newExpireDate}\n\n`;
+        msg += `🎯 سرویس شما اکنون فعال است.`;
+        return msg;
+    }
+
+    // 🆕 مدل ۶: افزایش حجم
+    if (data.new_size && data.gig_added) {
+        const newSizeGB = (data.new_size / (1024 ** 3)).toFixed(2);
+        let msg = `💾 افزایش حجم سرویس\n`;
+        msg += `━━━━━━━━━━━━━━━\n\n`;
+        msg += `✅ حجم سرویس با موفقیت افزایش یافت.\n\n`;
+        msg += `➕ حجم افزوده‌شده: ${data.gig_added}GB\n`;
+        msg += `📊 حجم کل جدید: ${data.new_gig || newSizeGB}GB\n\n`;
+        msg += `🎯 سرویس شما اکنون آماده استفاده است.`;
         return msg;
     }
 

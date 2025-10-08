@@ -76,7 +76,7 @@ const apiButtons: ApiButton[] = [
     {
         label: "تغییر وضعیت", method: "POST", endpoint: "reverse_mode", icon: "🔄", color: "from-pink-500 to-rose-500",
         fields: [{ name: "username", label: "نام سرویس", required: true }]
-    },
+    }
 ];
 
 const Home: React.FC = () => {
@@ -137,7 +137,7 @@ const Home: React.FC = () => {
             setModalOpen(true);
 
             // برای تلگرام - کل دیتا رو ارسال کن
-            await sendTelegramMessage(JSON.stringify(data, null, 2));
+            await sendTelegramMessage(message);
 
         } catch (error: any) {
             const message = error?.response?.data?.message || error.message;
@@ -255,6 +255,96 @@ const Home: React.FC = () => {
                     );
                 })}
             </div>
+            {/* ======================== */}
+            {/* محاسبه قیمت */}
+            {/* ======================== */}
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50 shadow-lg mt-6">
+                <div className="p-4">
+                    <h2 className="text-lg font-bold mb-4 text-cyan-400">محاسبه قیمت</h2>
+
+                    <div className="space-y-2">
+                        <input
+                            type="number"
+                            min={0.5}
+                            placeholder="حجم (گیگ)"
+                            value={formData["calcVolume"] || ""}
+                            onChange={(e) => setFormData(prev => ({ ...prev, calcVolume: parseFloat(e.target.value) }))}
+                            className="w-full rounded-xl px-4 py-3 text-sm bg-gray-700/50 text-white placeholder-gray-400 border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all"
+                        />
+                        <input
+                            type="number"
+                            min={1}
+                            placeholder="ماه"
+                            value={formData["calcMonth"] || ""}
+                            onChange={(e) => setFormData(prev => ({ ...prev, calcMonth: parseInt(e.target.value) }))}
+                            className="w-full rounded-xl px-4 py-3 text-sm bg-gray-700/50 text-white placeholder-gray-400 border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all"
+                        />
+                        <input
+                            type="number"
+                            min={1}
+                            placeholder="تعداد کاربر"
+                            value={formData["calcUsers"] || ""}
+                            onChange={(e) => setFormData(prev => ({ ...prev, calcUsers: parseInt(e.target.value) }))}
+                            className="w-full rounded-xl px-4 py-3 text-sm bg-gray-700/50 text-white placeholder-gray-400 border border-gray-600/50 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all"
+                        />
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            const volume = formData.calcVolume || 0;
+                            const month = formData.calcMonth || 0;
+                            const users = formData.calcUsers || 0;
+
+                            // =========================
+                            // محاسبه قیمت فروش از وب سرویس
+                            // =========================
+                            let priceSellWeb = 0;
+                            if (volume <= 30) priceSellWeb += volume * 2400;
+                            else if (volume <= 75) priceSellWeb += volume * 2100;
+                            else priceSellWeb += volume * 1800;
+                            priceSellWeb += month * 20000 + users * 10000;
+
+                            // =========================
+                            // محاسبه قیمت خرید از ربات
+                            // =========================
+                            let priceBuyBot = volume * 1500 + month * 20000 + users * 10000;
+                            priceBuyBot = Math.round(priceBuyBot * 0.8);
+
+                            // =========================
+                            // محاسبه قیمت خرید از وب سرویس
+                            // =========================
+                            let priceBuyWeb = volume * 1600 + month * 3000; // کاربران هزینه ندارند
+
+                            // =========================
+                            // محاسبه قیمت فروش از ربات
+                            // =========================
+                            let priceSellBot = priceBuyBot + 40000;
+
+                            // نمایش در مودال
+                            setModalTitle("نتایج محاسبه قیمت");
+                            setModalContent(
+                                `📦 محاسبه قیمت فروش و خرید وب سرویس\n` +
+                                `----------------------------------------\n` +
+                                `💰 خرید از وب سرویس: ${priceBuyWeb.toLocaleString()} تومان\n` +
+                                `💹 فروش از وب سرویس: ${priceSellWeb.toLocaleString()} تومان\n` +
+                                `✅ سود: ${(priceSellWeb - priceBuyWeb).toLocaleString()} تومان\n\n` +
+
+                                `🤖 محاسبه قیمت فروش و خرید ربات\n` +
+                                `----------------------------------------\n` +
+                                `💰 خرید از ربات: ${priceBuyBot.toLocaleString()} تومان\n` +
+                                `💹 فروش از ربات: ${priceSellBot.toLocaleString()} تومان\n` +
+                                `✅ سود: ${(priceSellBot - priceBuyBot).toLocaleString()} تومان`
+                            );
+
+                            setModalOpen(true);
+                        }}
+                        className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 text-sm font-bold shadow-lg transition-all duration-200 active:scale-95"
+                    >
+                        محاسبه قیمت
+                    </button>
+                </div>
+            </div>
+
 
             <ResultModal
                 open={modalOpen}

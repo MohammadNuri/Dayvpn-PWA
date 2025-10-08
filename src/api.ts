@@ -16,25 +16,31 @@ export const sendTelegramMessage = async (data: any) => {
     const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
     const chatId = Number(import.meta.env.VITE_TELEGRAM_CHAT_ID);
 
-    let message: string;
+    let formatted: string;
     
-    try {
-      // سعی می‌کنیم data رو parse کنیم
-      const parsed = JSON.parse(data);
-      message = formatTelegramMessage(parsed);
-    } catch (parseError) {
-      // اگر parse نشد، خود data رو به عنوان message استفاده می‌کنیم
-      message = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    // بررسی اینکه داده JSON هست یا نه
+    if (typeof data === "object") {
+      formatted = formatTelegramMessage(data);
+    } else if (typeof data === "string") {
+      try {
+        const parsed = JSON.parse(data);
+        formatted = formatTelegramMessage(parsed);
+      } catch {
+        formatted = data; // اگر پارس نشد یعنی متن ساده‌ست
+      }
+    } else {
+      formatted = String(data);
     }
 
     await axios.post(
       `https://api.telegram.org/bot${botToken}/sendMessage`,
       {
         chat_id: chatId,
-        text: message,
+        text: formatted,
       }
     );
   } catch (error: any) {
     console.error("Telegram send error:", error.response?.data || error.message);
   }
 };
+

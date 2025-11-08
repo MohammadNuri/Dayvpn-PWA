@@ -62,7 +62,7 @@ export const formatTelegramMessage = (data: any): string => {
             msg += `🔑 لینک‌های اختصاصی:\n`;
             data.tak_links.forEach((link: any, index: number) => {
                 const tag = link.split("#")[1] || link;
-                msg += `${index + 1}️⃣ ${decodeURIComponent(tag)}\n`;
+                msg += `${index + 1}. ${decodeURIComponent(String(tag))}\n`;
             });
         }
 

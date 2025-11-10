@@ -12,7 +12,7 @@
 html,
 #root {
   direction: rtl;
-  font-family: "IRYekan" , -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: "IRYekan", -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
 }
@@ -20,23 +20,34 @@ html,
 
 body {
   margin: 0;
-  font-family: "IRYekan", -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: "IRYekan", -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* --- تنظیم پس‌زمینه زیبا --- */
   background-image: url('./assets/background.jpeg');
-  /* آدرس عکس خود را قرار دهید */
   background-size: cover;
-  background-position: center;
+  /* fill the whole area */
+  background-position: center center;
+  /* keep focus at center */
+  background-repeat: no-repeat;
   background-attachment: fixed;
-  /* باعث می‌شود پس‌زمینه هنگام اسکرول ثابت بماند */
+}
+
+@media (min-width: 1024px) {
+  body {
+    background-image: url('./assets/background-pc.jpg');
+    background-position: top center;
+    /* adjust focus for wider screens */
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
 }
 
 /* Override کردن فونت پیش‌فرض Tailwind برای pre و code */
-pre, code, kbd, samp {
+pre,
+code,
+kbd,
+samp {
   font-family: "IRYekan", -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif !important;

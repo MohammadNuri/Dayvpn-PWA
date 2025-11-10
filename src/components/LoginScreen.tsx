@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import sha256 from "crypto-js/sha256";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 import ClipLoader from "react-spinners/ClipLoader";
 import { useAuth } from "../AuthContext";
+import { showErrorToast, showSuccessToast } from "../toast";
 
 const PASSWORD_HASH = import.meta.env.VITE_PASSWORD_HASH as string;
 
@@ -22,16 +22,16 @@ const LoginScreen: React.FC = () => {
       await new Promise((res) => setTimeout(res, 500));
 
       if(!masterPassword || masterPassword.trim() === "") {
-        toast.error("لطفا رمز عبور را وارد کنید");
+        showErrorToast("لطفا رمز عبور را وارد کنید");
         return;
       }
 
       if (sha256(masterPassword).toString() === PASSWORD_HASH) {
         login(); // بروزرسانی state
-        toast.success("ورود موفقیت‌آمیز بود");
+        showSuccessToast("ورود موفقیت‌آمیز بود");
         navigate("/home");
       } else {
-        toast.error("رمز اشتباه است");
+        showErrorToast("رمز اشتباه است");
       }
     } finally {
       setLoading(false);

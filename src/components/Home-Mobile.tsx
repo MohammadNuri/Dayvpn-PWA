@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { apiClient, sendTelegramMessage } from "../api";
 import ResultModal from "./ResultModal";
+import { showErrorToast } from "../toast";
 
 const ClipLoader: React.FC<{ color: string; size: number }> = ({ color, size }) => (
     <div className="animate-spin rounded-full border-2 border-t-transparent"
@@ -92,9 +93,10 @@ const HomeMobile: React.FC = () => {
                     formData[index][f.name] === undefined ||
                     formData[index][f.name] === "")
             ) {
-                setModalContent(`فیلد ${f.label} اجباری است!`);
-                setModalTitle("خطای اعتبارسجنجی");
-                setModalOpen(true);
+                // setModalContent(`فیلد ${f.label} اجباری است!`);
+                // setModalTitle("خطای اعتبارسجنجی");
+                // setModalOpen(true);
+                showErrorToast(`فیلد ${f.label} اجباری است!`);
                 return;
             }
         }
@@ -114,7 +116,6 @@ const HomeMobile: React.FC = () => {
             }
 
             const data = response.data;
-            // برای مودال
             const message = data.ok
                 ? JSON.stringify(data.result, null, 2)
                 : data.error;
@@ -122,18 +123,14 @@ const HomeMobile: React.FC = () => {
             setModalContent(message);
             setModalTitle(btn.label);
             setModalOpen(true);
-
-            // برای تلگرام - کل دیتا رو ارسال کن
+            setLoadingIndex(null); 
             await sendTelegramMessage(message);
 
         } catch (error: any) {
             const message = error?.response?.data?.message || error.message;
-            setModalContent(message);
-            setModalTitle(`خطای ${btn.label}`);
-            setModalOpen(true);
+            showErrorToast(message);
+            setLoadingIndex(null); 
             await sendTelegramMessage(message);
-        } finally {
-            setLoadingIndex(null);
         }
     };
 

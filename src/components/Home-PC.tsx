@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { apiClient, sendTelegramMessage } from "../api";
 import ResultModal from "./ResultModal";
+import { showErrorToast } from "../toast";
 
 // Define the shape of the status data
 interface StatusData {
@@ -137,7 +138,7 @@ const StatusCard: React.FC = () => {
     );
 
     return (
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 shadow-lg p-6">
+        <div className="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 shadow-lg p-2">
             <div className="flex flex-col md:flex-row items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-white mb-4 md:mb-0">📊 وضعیت کل</h2>
                 <button
@@ -197,6 +198,7 @@ const HomePC: React.FC = () => {
     };
 
     const handleApiCall = async (btn: ApiButton, index: number) => {
+
         if (loadingIndex !== null) return;
 
         const fields = btn.fields || [];
@@ -207,9 +209,7 @@ const HomePC: React.FC = () => {
                     formData[index][f.name] === undefined ||
                     formData[index][f.name] === "")
             ) {
-                setModalContent(`فیلد ${f.label} اجباری است!`);
-                setModalTitle("خطای اعتبارسجنجی");
-                setModalOpen(true);
+                showErrorToast(`فیلد ${f.label} اجباری است!`);
                 return;
             }
         }
@@ -236,17 +236,14 @@ const HomePC: React.FC = () => {
             setModalContent(message);
             setModalTitle(btn.label);
             setModalOpen(true);
-
+            setLoadingIndex(null);  
             await sendTelegramMessage(message);
 
         } catch (error: any) {
             const message = error?.response?.data?.message || error.message;
-            setModalContent(message);
-            setModalTitle(`خطای ${btn.label}`);
-            setModalOpen(true);
-            await sendTelegramMessage(message);
-        } finally {
+            showErrorToast(message);
             setLoadingIndex(null);
+            await sendTelegramMessage(message);
         }
     };
 
@@ -258,16 +255,17 @@ const HomePC: React.FC = () => {
                 <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
                     <div className="flex items-center justify-between">
                         {/* Modernized Title */}
+                        <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                            آنلاین
+                        </div>
                         <div className="flex items-center gap-3">
                             <ShieldIcon />
                             <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                                 DayVPN
                             </h1>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-300">
-                            <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
-                            آنلاین
-                        </div>
+
                     </div>
                 </div>
             </header>
@@ -347,7 +345,7 @@ const HomePC: React.FC = () => {
                                         </button>
                                     </div>
                                 </div>
-                                
+
                             );
                         })}
 
@@ -387,7 +385,7 @@ const HomePC: React.FC = () => {
                                     />
                                 </div>
                             </div>
-                            
+
                             {/* Card Footer - Button */}
                             <div className="px-4 pb-4 mt-2">
                                 <button
@@ -454,7 +452,7 @@ const HomePC: React.FC = () => {
             <footer className="bg-white/5 backdrop-blur-lg border-t border-white/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
                     <p className="text-center text-xs text-gray-400">
-                        DayVPN Panel © 2024
+                        DayVPN Panel © 2026
                     </p>
                 </div>
             </footer>

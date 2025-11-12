@@ -1,7 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { apiClient, sendTelegramMessage } from "../api";
-import ResultModal from "./ResultModal";
-import { showErrorToast } from "../toast";
+import { apiClient, sendTelegramMessage } from "../api.ts";
+import ResultModal from "./ResultModal.tsx";
+import { showErrorToast } from "../toast.tsx";
+import { useAuth } from "../AuthContext.tsx"; // Import useAuth
+import { useCountDown } from "../useCountDown.ts"; // Import the countdown hook
+
+// Inline Logout Icon
+const LogoutIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+        <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 015.25 2h5.5A2.25 2.25 0 0113 4.25v2a.75.75 0 01-1.5 0v-2a.75.75 0 00-.75-.75h-5.5a.75.75 0 00-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 00.75-.75v-2a.75.75 0 011.5 0v2A2.25 2.25 0 0110.75 18h-5.5A2.25 2.25 0 013 15.75V4.25z" clipRule="evenodd" />
+        <path fillRule="evenodd" d="M16.72 9.22a.75.75 0 011.06 0l2.25 2.25a.75.75 0 010 1.06l-2.25 2.25a.75.75 0 11-1.06-1.06L17.44 12l-1.78-1.72a.75.75 0 010-1.06zM11 11.25a.75.75 0 01.75.75v.001c0 .414.336.75.75.75h3.75a.75.75 0 010 1.5h-3.75a.75.75 0 01-.75.75v.001a.75.75 0 01-1.5 0v-.002a.75.75 0 01-.75-.75h-3a.75.75 0 010-1.5h3a.75.75 0 01.75-.75v-.001a.75.75 0 011.5 0v.002z" clipRule="evenodd" />
+    </svg>
+);
+
+// --- NEW REFRESH ICON ---
+const RefreshIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+        <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.32 5.002l-.123-.123a.75.75 0 011.06-1.06l.123.123a4 4 0 006.706-3.642l-.184-.825a.75.75 0 011.472-.328l.184.825a5.5 5.5 0 01-1.921 4.907zM4.688 8.576a5.5 5.5 0 019.32-5.002l.123.123a.75.75 0 01-1.06 1.06l-.123-.123a4 4 0 00-6.706 3.642l.184.825a.75.75 0 01-1.472.328l-.184-.825a5.5 5.5 0 011.921-4.907z" clipRule="evenodd" />
+    </svg>
+);
 
 // Define the shape of the status data
 interface StatusData {
@@ -60,7 +77,6 @@ interface ApiButton {
 }
 
 const apiButtons: ApiButton[] = [
-    // We removed "وضعیت کل" from here, as it's now in its own component
     {
         label: "لیست سرویس‌ها", method: "GET", endpoint: "clients", icon: "📋", color: "from-purple-500 to-pink-500",
         fields: [{ name: "limit", label: "تعداد سرویس", type: "number" }]
@@ -102,7 +118,6 @@ const apiButtons: ApiButton[] = [
 ];
 
 // --- Status Card Component ---
-// We create a separate component for the status card to manage its own state
 const StatusCard: React.FC = () => {
     const [statusData, setStatusData] = useState<StatusData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -125,7 +140,6 @@ const StatusCard: React.FC = () => {
         }
     };
 
-    // Fetch data on component mount
     useEffect(() => {
         fetchStatus();
     }, []);
@@ -144,14 +158,12 @@ const StatusCard: React.FC = () => {
                 <button
                     onClick={fetchStatus}
                     disabled={isLoading}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 px-5 py-2 text-sm font-bold shadow-lg transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="به‌روزرسانی"
+                    className={`flex items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm font-bold shadow-lg transition-all duration-200 active:scale-90 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed ${isLoading ? 'animate-spin' : ''}`}
                 >
-                    {isLoading ? (
-                        <ClipLoader color="#fff" size={18} />
-                    ) : (
-                        <span>🔄</span>
-                    )}
-                    <span>به‌روزرسانی</span>
+                    <span className="text-gray-300">
+                        <RefreshIcon />
+                    </span>
                 </button>
             </div>
 
@@ -189,6 +201,11 @@ const HomePC: React.FC = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [modalContent, setModalContent] = useState("");
     const [modalTitle, setModalTitle] = useState("");
+
+    // Get auth state and functions
+    const { expiryTime, logout } = useAuth();
+    // Get the formatted countdown string
+    const remainingTime = useCountDown(expiryTime);
 
     const handleInputChange = (index: number, field: string, value: any) => {
         setFormData((prev) => ({
@@ -236,7 +253,7 @@ const HomePC: React.FC = () => {
             setModalContent(message);
             setModalTitle(btn.label);
             setModalOpen(true);
-            setLoadingIndex(null);  
+            setLoadingIndex(null);
             await sendTelegramMessage(message);
 
         } catch (error: any) {
@@ -248,31 +265,42 @@ const HomePC: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col">
+        <div className="min-h-screen flex flex-col text-white bg-gray-900/30 backdrop-blur-sm">
             {/* --- Header --- */}
             <header className="sticky top-0 z-10 bg-white/5 backdrop-blur-lg border-b border-white/10">
-                {/* Constrained content */}
                 <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
                     <div className="flex items-center justify-between">
-                        {/* Modernized Title */}
+                        {/* Status (Left) */}
                         <div className="flex items-center gap-2 text-sm text-gray-300">
                             <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
                             آنلاین
                         </div>
+                        {/* Title (Center) */}
                         <div className="flex items-center gap-3">
                             <ShieldIcon />
                             <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                                 DayVPN
                             </h1>
                         </div>
-
+                        {/* Timer & Logout (Right) */}
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-yellow-300 bg-white/10 px-3 py-1 rounded-full tabular-nums">
+                                {remainingTime}
+                            </span>
+                            <button
+                                onClick={logout}
+                                title="خروج"
+                                className="text-gray-300 hover:text-red-400 transition-colors duration-200 active:scale-90"
+                            >
+                                <LogoutIcon />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
 
             {/* --- Main Content --- */}
             <main className="w-full flex-grow">
-                {/* Constrained content */}
                 <div className="max-w-7xl mx-auto p-4 md:p-8">
 
                     {/* --- Status Card --- */}
@@ -283,16 +311,14 @@ const HomePC: React.FC = () => {
                     {/* --- Main Grid (8 cards, 4 per row) --- */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-                        {/* Column 1-3: API Buttons (3 columns wide) */}
                         {apiButtons.map((btn, idx) => {
                             const hasFields = btn.fields && btn.fields.length > 0;
 
                             return (
                                 <div
                                     key={idx}
-                                    className="bg-white/5 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/10 shadow-lg flex flex-col" // Use flex-col to make button stick to bottom
+                                    className="bg-white/5 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/10 shadow-lg flex flex-col"
                                 >
-                                    {/* Card Header */}
                                     <div
                                         className={`flex items-center justify-between p-4`}
                                     >
@@ -304,15 +330,13 @@ const HomePC: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Card Body - Fields (always open) */}
                                     {hasFields ? (
-                                        // Use flex-grow to push button down
                                         <div className="px-4 pb-4 space-y-2 pt-1 flex-grow">
                                             {btn.fields?.map((f: ApiField) => (
                                                 <input
                                                     key={f.name}
-                                                    type={f.type === "number" ? "text" : "text"} // Use text for better paste
-                                                    inputMode={f.type === "number" ? "decimal" : "text"} // Show numpad
+                                                    type={f.type === "number" ? "text" : "text"}
+                                                    inputMode={f.type === "number" ? "decimal" : "text"}
                                                     min={f.min}
                                                     placeholder={f.label}
                                                     value={formData[idx]?.[f.name] || ""}
@@ -323,11 +347,9 @@ const HomePC: React.FC = () => {
                                             ))}
                                         </div>
                                     ) : (
-                                        // Add spacer for non-field cards to align buttons
                                         <div className="flex-grow"></div>
                                     )}
 
-                                    {/* Card Footer - Button */}
                                     <div className="px-4 pb-4 mt-2">
                                         <button
                                             onClick={() => handleApiCall(btn, idx)}
@@ -345,20 +367,17 @@ const HomePC: React.FC = () => {
                                         </button>
                                     </div>
                                 </div>
-
                             );
                         })}
 
-                        {/* Column 4: Price Calculator (1 column wide) */}
                         <div className="bg-white/5 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/10 shadow-lg flex flex-col">
-                            {/* Card Body - Fields */}
                             <div className="p-4 flex-grow">
                                 <h2 className="text-lg font-bold mb-4 text-cyan-400">محاسبه قیمت</h2>
 
                                 <div className="space-y-2">
                                     <input
-                                        type="text" // Use text
-                                        inputMode="decimal" // Show numpad
+                                        type="text"
+                                        inputMode="decimal"
                                         min={0.5}
                                         placeholder="حجم (گیگ)"
                                         value={formData["calcVolume"] || ""}
@@ -366,8 +385,8 @@ const HomePC: React.FC = () => {
                                         className="w-full rounded-xl px-4 py-3 text-sm bg-white/5 text-white placeholder-gray-300 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all"
                                     />
                                     <input
-                                        type="text" // Use text
-                                        inputMode="decimal" // Show numpad
+                                        type="text"
+                                        inputMode="decimal"
                                         min={1}
                                         placeholder="ماه"
                                         value={formData["calcMonth"] || ""}
@@ -375,8 +394,8 @@ const HomePC: React.FC = () => {
                                         className="w-full rounded-xl px-4 py-3 text-sm bg-white/5 text-white placeholder-gray-300 border border-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all"
                                     />
                                     <input
-                                        type="text" // Use text
-                                        inputMode="decimal" // Show numpad
+                                        type="text"
+                                        inputMode="decimal"
                                         min={1}
                                         placeholder="تعداد کاربر"
                                         value={formData["calcUsers"] || ""}
@@ -386,41 +405,21 @@ const HomePC: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Card Footer - Button */}
                             <div className="px-4 pb-4 mt-2">
                                 <button
                                     onClick={() => {
                                         const volume = parseFloat(formData.calcVolume) || 0;
                                         const month = parseInt(formData.calcMonth) || 0;
                                         const users = parseInt(formData.calcUsers) || 0;
-
-                                        // ... (rest of the calculation logic is the same)
-                                        // =========================
-                                        // محاسبه قیمت فروش از وب سرویس
-                                        // =========================
                                         let priceSellWeb = 0;
                                         if (volume <= 30) priceSellWeb += volume * 2400;
                                         else if (volume <= 75) priceSellWeb += volume * 2100;
                                         else priceSellWeb += volume * 1800;
                                         priceSellWeb += month * 20000 + users * 10000;
-
-                                        // =========================
-                                        // محاسبه قیمت خرید از ربات
-                                        // =========================
                                         let priceBuyBot = volume * 1500 + month * 20000 + users * 10000;
                                         priceBuyBot = Math.round(priceBuyBot * 0.8);
-
-                                        // =========================
-                                        // محاسبه قیمت خرید از وب سرویس
-                                        // =========================
-                                        let priceBuyWeb = volume * 1600 + month * 3000; // کاربران هزینه ندارند
-
-                                        // =========================
-                                        // محاسبه قیمت فروش از ربات
-                                        // =========================
+                                        let priceBuyWeb = volume * 1600 + month * 3000;
                                         let priceSellBot = priceBuyBot + 40000;
-
-                                        // نمایش در مودال
                                         setModalTitle("نتایج محاسبه قیمت");
                                         setModalContent(
                                             `📦 محاسبه قیمت فروش و خرید وب سرویس\n` +
@@ -428,14 +427,12 @@ const HomePC: React.FC = () => {
                                             `💰 خرید از وب سرویس: ${priceBuyWeb.toLocaleString()} تومان\n` +
                                             `💹 فروش از وب سرویس: ${priceSellWeb.toLocaleString()} تومان\n` +
                                             `✅ سود: ${(priceSellWeb - priceBuyWeb).toLocaleString()} تومان\n\n` +
-
                                             `🤖 محاسبه قیمت فروش و خرید ربات\n` +
                                             `----------------------------------------\n` +
                                             `💰 خرید از ربات: ${priceBuyBot.toLocaleString()} تومان\n` +
                                             `💹 فروش از ربات: ${priceSellBot.toLocaleString()} تومان\n` +
                                             `✅ سود: ${(priceSellBot - priceBuyBot).toLocaleString()} تومان`
                                         );
-
                                         setModalOpen(true);
                                     }}
                                     className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-3 text-sm font-bold shadow-lg transition-all duration-200 active:scale-95"
@@ -448,7 +445,6 @@ const HomePC: React.FC = () => {
                 </div>
             </main>
 
-            {/* --- Footer --- */}
             <footer className="bg-white/5 backdrop-blur-lg border-t border-white/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
                     <p className="text-center text-xs text-gray-400">
